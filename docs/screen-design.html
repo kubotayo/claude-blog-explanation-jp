@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>画面設計書 — claude-blog-explanation-jp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; font-size: 15px; line-height: 1.8; color: #1a1a2e; background: #f8f9fc; padding: 40px 20px; }
+    .container { max-width: 1000px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 48px 48px 36px; }
+    .header h1 { font-size: 26px; font-weight: 700; }
+    .header .subtitle { margin-top: 8px; font-size: 14px; opacity: .75; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .meta-item { background: rgba(255,255,255,.1); border-radius: 8px; padding: 12px 16px; }
+    .meta-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+    .meta-item .value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .body { padding: 48px; }
+    h2 { font-size: 20px; font-weight: 700; color: #0f3460; border-left: 4px solid #0f3460; padding-left: 14px; margin: 40px 0 20px; }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin: 28px 0 12px; }
+    h4 { font-size: 14px; font-weight: 700; color: #374151; margin: 20px 0 8px; }
+    p { margin-bottom: 12px; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    th { background: #f0f4ff; color: #0f3460; font-weight: 700; text-align: left; padding: 10px 14px; border: 1px solid #d8e2ff; }
+    td { padding: 10px 14px; border: 1px solid #e8ecf4; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafbff; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; color: #333; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: #f4f6fb; padding: 2px 6px; border-radius: 4px; color: #c0392b; }
+    .callout { background: #f0f4ff; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+    .callout.warn { background: #fff8e1; border-left-color: #f59e0b; }
+    hr { border: none; border-top: 2px solid #f0f2f8; margin: 40px 0; }
+    .toc { background: #f8f9fc; border: 1px solid #e0e7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 14px; font-weight: 700; color: #0f3460; margin: 0 0 12px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { font-size: 14px; margin-bottom: 4px; }
+    .toc a { color: #0f3460; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .footer { background: #f8f9fc; padding: 24px 48px; border-top: 1px solid #e8ecf4; font-size: 13px; color: #888; }
+
+    /* モックアップ */
+    .mockup-wrapper { margin: 24px 0; }
+    .mockup-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin-bottom: 8px; }
+    .mockup { border: 2px solid #d1d5db; border-radius: 12px; overflow: hidden; font-family: "Helvetica Neue", Arial, sans-serif; background: #fff; }
+    .mockup-bar { background: #e5e7eb; padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+    .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .mockup-url { background: #fff; border-radius: 6px; flex: 1; padding: 4px 10px; font-size: 12px; color: #6b7280; }
+    .mockup-body { padding: 0; }
+
+    /* 一覧ページモックアップ */
+    .m-header { background: #0f3460; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .m-header-title { font-size: 18px; font-weight: 700; }
+    .m-header-sub { font-size: 12px; opacity: .7; }
+    .m-filter { background: #f8faff; border-bottom: 1px solid #e0e7ff; padding: 12px 24px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .m-filter-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-right: 4px; }
+    .m-btn { border: 1px solid #d1d5db; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; background: #fff; color: #374151; }
+    .m-btn.active { background: #0f3460; color: #fff; border-color: #0f3460; }
+    .m-btn.s { background: #fff0f0; color: #c0392b; border-color: #f5c6cb; }
+    .m-btn.a { background: #fff8e1; color: #b7700d; border-color: #ffd591; }
+    .m-btn.b { background: #e8f4fd; color: #1a6fa8; border-color: #bee3f8; }
+    .m-btn.c { background: #f0f0f0; color: #555; border-color: #ccc; }
+    .m-list { padding: 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .m-card { border: 1px solid #e0e7ff; border-radius: 10px; padding: 16px; background: #fff; }
+    .m-card.highlight { border-color: #fbbf24; background: #fffbeb; }
+    .m-card-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .m-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .m-badge-s { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb; }
+    .m-badge-a { background: #fff8e1; color: #b7700d; border: 1px solid #ffd591; }
+    .m-badge-b { background: #e8f4fd; color: #1a6fa8; border: 1px solid #bee3f8; }
+    .m-badge-eng { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .m-badge-biz { background: #ede7f6; color: #512da8; border: 1px solid #ce93d8; }
+    .m-badge-gen { background: #fce4ec; color: #ad1457; border: 1px solid #f48fb1; }
+    .m-card-title { font-size: 15px; font-weight: 700; color: #0f3460; margin-bottom: 6px; }
+    .m-card-summary { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .m-card-date { font-size: 12px; color: #9ca3af; }
+
+    /* 詳細ページモックアップ */
+    .m-detail-header { background: #f8faff; border-bottom: 1px solid #e0e7ff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    .m-back-btn { background: #e0e7ff; border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #0f3460; cursor: pointer; font-weight: 600; }
+    .m-detail-body { padding: 24px; }
+    .m-detail-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .m-detail-title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; line-height: 1.4; }
+    .m-detail-orig { font-size: 13px; color: #9ca3af; margin-bottom: 16px; }
+    .m-summary-box { background: #f0f4ff; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 20px; font-size: 14px; color: #333; line-height: 1.7; }
+    .m-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+    .m-prose { font-size: 14px; color: #374151; line-height: 1.8; }
+    .m-prose h3 { font-size: 15px; font-weight: 700; color: #0f3460; margin: 16px 0 8px; }
+    .m-prose p { margin-bottom: 10px; }
+    .m-points { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+    .m-points-col { background: #f8faff; border: 1px solid #e0e7ff; border-radius: 8px; padding: 12px 14px; }
+    .m-points-col-title { font-size: 12px; font-weight: 700; color: #0f3460; margin-bottom: 8px; }
+    .m-points-col ul { padding-left: 16px; }
+    .m-points-col li { font-size: 13px; color: #374151; margin-bottom: 4px; }
+    .m-orig-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; padding: 10px 18px; background: #0f3460; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>画面設計書</h1>
+    <div class="subtitle">claude-blog-explanation-jp</div>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">作成日</div><div class="value">2026-05-27</div></div>
+      <div class="meta-item"><div class="label">ステータス</div><div class="value">Draft</div></div>
+      <div class="meta-item"><div class="label">バージョン</div><div class="value">1.0.0</div></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="toc">
+      <h3>目次</h3>
+      <ol>
+        <li><a href="#screens">画面一覧</a></li>
+        <li><a href="#list">記事一覧ページ（/）</a></li>
+        <li><a href="#detail">記事詳細ページ（/articles/[id]）</a></li>
+        <li><a href="#components">共通コンポーネント仕様</a></li>
+        <li><a href="#responsive">レスポンシブ対応</a></li>
+      </ol>
+    </div>
+
+    <h2 id="screens">1. 画面一覧</h2>
+    <table>
+      <tr><th>画面名</th><th>URL</th><th>説明</th><th>レンダリング</th></tr>
+      <tr><td>記事一覧</td><td><code>/</code></td><td>全記事を重要度順に表示。フィルタリング機能付き</td><td>ISR（revalidate: 3600）</td></tr>
+      <tr><td>記事詳細</td><td><code>/articles/[id]</code></td><td>翻訳・解説の全文表示</td><td>ISR（revalidate: 3600）</td></tr>
+    </table>
+
+    <hr />
+
+    <h2 id="list">2. 記事一覧ページ（/）</h2>
+
+    <h3>2-1. 画面構成</h3>
+    <table>
+      <tr><th>要素</th><th>内容</th><th>備考</th></tr>
+      <tr><td>グローバルヘッダー</td><td>サイト名「Claude ブログ 日本語解説」・サブテキスト</td><td>全ページ共通</td></tr>
+      <tr><td>フィルターバー</td><td>重要度フィルター（S/A/B/C/全て）・対象読者フィルター（エンジニア/ビジネス/一般/研究者/全て）</td><td>Client Component</td></tr>
+      <tr><td>記事カードリスト</td><td>重要度スコア降順（S→A→B→C）でカードを表示</td><td>Server Component</td></tr>
+      <tr><td>空状態</td><td>記事が0件の場合のメッセージ</td><td>—</td></tr>
+    </table>
+
+    <h3>2-2. モックアップ</h3>
+    <div class="mockup-wrapper">
+      <div class="mockup-label">記事一覧ページ</div>
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+          <div class="mockup-url">claude-blog-explanation-jp.vercel.app</div>
+        </div>
+        <div class="mockup-body">
+          <div class="m-header">
+            <div>
+              <div class="m-header-title">Claude ブログ 日本語解説</div>
+              <div class="m-header-sub">Anthropic 公式ブログの翻訳・解説サイト</div>
+            </div>
+          </div>
+          <div class="m-filter">
+            <span class="m-filter-label">重要度:</span>
+            <span class="m-btn active">全て</span>
+            <span class="m-btn s">S</span>
+            <span class="m-btn a">A</span>
+            <span class="m-btn b">B</span>
+            <span class="m-btn c">C</span>
+            <span style="width:1px; height:20px; background:#e5e7eb; margin:0 4px;"></span>
+            <span class="m-filter-label">読者:</span>
+            <span class="m-btn active">全て</span>
+            <span class="m-btn">エンジニア</span>
+            <span class="m-btn">ビジネス</span>
+            <span class="m-btn">一般</span>
+          </div>
+          <div class="m-list">
+            <div class="m-card highlight">
+              <div class="m-card-meta">
+                <span class="m-badge m-badge-s">重要度 S</span>
+                <span class="m-badge m-badge-eng">エンジニア向け</span>
+                <span class="m-badge m-badge-biz">ビジネス向け</span>
+              </div>
+              <div class="m-card-title">Claude 4 発表：新モデルの性能と API 変更点を詳解</div>
+              <div class="m-card-summary">Anthropic が Claude 4 シリーズを発表。Opus・Sonnet・Haiku の3モデルが同時リリースされ、コーディング・推論能力が大幅に向上。API の breaking changes に注意が必要。</div>
+              <div class="m-card-date">2026-05-20 ／ Anthropic Team</div>
+            </div>
+            <div class="m-card">
+              <div class="m-card-meta">
+                <span class="m-badge m-badge-a">重要度 A</span>
+                <span class="m-badge m-badge-eng">エンジニア向け</span>
+              </div>
+              <div class="m-card-title">Claude の新しい Tool Use 機能：並列実行と型安全な実装方法</div>
+              <div class="m-card-summary">Tool Use が大幅アップデート。複数ツールの並列実行が可能になり、Zod スキーマによる型安全な実装ガイドを解説。</div>
+              <div class="m-card-date">2026-05-15 ／ Engineering Team</div>
+            </div>
+            <div class="m-card">
+              <div class="m-card-meta">
+                <span class="m-badge m-badge-b">重要度 B</span>
+                <span class="m-badge m-badge-gen">一般向け</span>
+              </div>
+              <div class="m-card-title">Anthropic の安全性研究：2026年の進捗と今後の展望</div>
+              <div class="m-card-summary">Anthropic が2026年の安全性研究の成果を公開。Constitutional AI の改善点と今後のロードマップを解説する。</div>
+              <div class="m-card-date">2026-05-10 ／ Safety Team</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>2-3. 記事カード仕様</h3>
+    <table>
+      <tr><th>要素</th><th>表示内容</th><th>条件</th></tr>
+      <tr><td>重要度バッジ</td><td>S / A / B / C（各色分け）</td><td>必須</td></tr>
+      <tr><td>対象読者バッジ</td><td>エンジニア向け / ビジネス向け / 一般向け / 研究者向け</td><td>1〜複数</td></tr>
+      <tr><td>タイトル</td><td>日本語タイトル（<code>japaneseTitle</code>）</td><td>必須</td></tr>
+      <tr><td>要約</td><td>2行に切り捨て（CSS line-clamp）</td><td>必須</td></tr>
+      <tr><td>日付・著者</td><td><code>originalPublishedAt</code> ／ <code>author</code></td><td>必須</td></tr>
+      <tr><td>重要度 S の強調</td><td>カード背景を黄色系に変更し視覚的に目立たせる</td><td>importanceScore === "S"</td></tr>
+    </table>
+
+    <h3>2-4. フィルター仕様</h3>
+    <table>
+      <tr><th>フィルター種別</th><th>選択肢</th><th>動作</th></tr>
+      <tr><td>重要度</td><td>全て / S / A / B / C</td><td>単一選択。選択した重要度の記事のみ表示</td></tr>
+      <tr><td>対象読者</td><td>全て / エンジニア / ビジネス / 一般 / 研究者</td><td>単一選択。<code>targetAudience</code> に選択値が含まれる記事を表示</td></tr>
+    </table>
+    <div class="callout">
+      フィルターは URL クエリパラメータ（<code>?score=S&audience=engineer</code>）に反映する。ページ再読み込み後も状態を維持でき、URLの共有が可能になる。
+    </div>
+
+    <hr />
+
+    <h2 id="detail">3. 記事詳細ページ（/articles/[id]）</h2>
+
+    <h3>3-1. 画面構成</h3>
+    <table>
+      <tr><th>要素</th><th>内容</th><th>備考</th></tr>
+      <tr><td>詳細ヘッダー</td><td>「← 一覧に戻る」ボタン</td><td>—</td></tr>
+      <tr><td>メタ情報</td><td>重要度バッジ・対象読者バッジ・公開日・著者・カテゴリ</td><td>—</td></tr>
+      <tr><td>日本語タイトル</td><td><code>japaneseTitle</code></td><td>—</td></tr>
+      <tr><td>原文タイトル</td><td>小文字で <code>originalTitle</code>（英語）を表示</td><td>—</td></tr>
+      <tr><td>要約ボックス</td><td>強調表示の枠付きボックスに <code>summary</code> を表示</td><td>—</td></tr>
+      <tr><td>詳細解説</td><td><code>detailedExplanation</code> を Markdown レンダリング</td><td>react-markdown</td></tr>
+      <tr><td>ポイントまとめ</td><td>エンジニア向け・ビジネス向けを2カラムで並べて箇条書き表示</td><td>対象読者に応じて強調</td></tr>
+      <tr><td>日本での活用イメージ</td><td><code>japanUseCases</code> を Markdown レンダリング</td><td>—</td></tr>
+      <tr><td>原文リンク</td><td>「原文を読む（英語）」ボタン</td><td>別タブで開く</td></tr>
+    </table>
+
+    <h3>3-2. モックアップ</h3>
+    <div class="mockup-wrapper">
+      <div class="mockup-label">記事詳細ページ</div>
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#ff5f57;"></div>
+          <div class="mockup-dot" style="background:#febc2e;"></div>
+          <div class="mockup-dot" style="background:#28c840;"></div>
+          <div class="mockup-url">claude-blog-explanation-jp.vercel.app/articles/abc123</div>
+        </div>
+        <div class="mockup-body">
+          <div class="m-detail-header">
+            <span class="m-back-btn">← 一覧に戻る</span>
+          </div>
+          <div class="m-detail-body">
+            <div class="m-detail-meta">
+              <span class="m-badge m-badge-s">重要度 S</span>
+              <span class="m-badge m-badge-eng">エンジニア向け</span>
+              <span class="m-badge m-badge-biz">ビジネス向け</span>
+              <span style="font-size:12px; color:#9ca3af;">2026-05-20 ／ Anthropic Team ／ Product</span>
+            </div>
+            <div class="m-detail-title">Claude 4 発表：新モデルの性能と API 変更点を詳解</div>
+            <div class="m-detail-orig">原文: "Introducing Claude 4: A New Frontier in AI Performance"</div>
+            <div class="m-summary-box">
+              Anthropic が待望の Claude 4 シリーズを発表。Opus 4・Sonnet 4・Haiku 4 の3モデルが同時リリースされ、特にコーディング・数学的推論能力が前世代比で大幅に向上しています。API の一部 breaking changes が含まれるため、既存ユーザーは移行ガイドの確認が必要です。
+            </div>
+            <div class="m-section-title">詳細解説</div>
+            <div class="m-prose">
+              <h3>モデル性能の向上</h3>
+              <p>Claude 4 Opus は SWE-bench において前世代比 +15% のスコアを記録。特に複数ファイルにまたがるリファクタリングや、曖昧な仕様を推論で補う能力が顕著に改善されました。</p>
+              <h3>API の変更点</h3>
+              <p><code>thinking</code> パラメータの仕様変更など、主要な breaking changes があります。移行ガイドを参照してください。</p>
+            </div>
+            <div class="m-section-title">ポイントまとめ</div>
+            <div class="m-points">
+              <div class="m-points-col">
+                <div class="m-points-col-title">エンジニア向けポイント</div>
+                <ul>
+                  <li>SWE-bench スコア前世代比 +15%</li>
+                  <li><code>thinking</code> パラメータの仕様変更</li>
+                  <li>並列 Tool Use がデフォルト有効に</li>
+                  <li>移行ガイドは公式ドキュメント参照</li>
+                </ul>
+              </div>
+              <div class="m-points-col">
+                <div class="m-points-col-title">ビジネス向けポイント</div>
+                <ul>
+                  <li>Haiku 4 は前世代比コスト -30%</li>
+                  <li>企業向け API の SLA 向上</li>
+                  <li>日本語性能が大幅に改善</li>
+                  <li>既存契約への影響なし</li>
+                </ul>
+              </div>
+            </div>
+            <div class="m-section-title">日本での活用イメージ</div>
+            <div class="m-prose">
+              <p>日本語性能の向上により、国内の金融・医療・法律分野での文書処理自動化がより現実的になりました。特に複雑な契約書のレビューや、医療記録のサマリー生成での活用が期待されます。</p>
+            </div>
+            <a class="m-orig-link" href="#">原文を読む（英語）↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2 id="components">4. 共通コンポーネント仕様</h2>
+
+    <h3>4-1. ImportanceBadge</h3>
+    <table>
+      <tr><th>Props</th><th>型</th><th>説明</th></tr>
+      <tr><td><code>score</code></td><td><code>"S" | "A" | "B" | "C"</code></td><td>重要度スコア</td></tr>
+    </table>
+    <table>
+      <tr><th>score</th><th>背景色</th><th>文字色</th><th>ボーダー色</th><th>表示テキスト</th></tr>
+      <tr><td>S</td><td>#fff0f0</td><td>#c0392b</td><td>#f5c6cb</td><td>重要度 S</td></tr>
+      <tr><td>A</td><td>#fff8e1</td><td>#b7700d</td><td>#ffd591</td><td>重要度 A</td></tr>
+      <tr><td>B</td><td>#e8f4fd</td><td>#1a6fa8</td><td>#bee3f8</td><td>重要度 B</td></tr>
+      <tr><td>C</td><td>#f0f0f0</td><td>#555555</td><td>#cccccc</td><td>重要度 C</td></tr>
+    </table>
+
+    <h3>4-2. AudienceBadge</h3>
+    <table>
+      <tr><th>Props</th><th>型</th><th>説明</th></tr>
+      <tr><td><code>audience</code></td><td><code>"engineer" | "business" | "general" | "researcher"</code></td><td>対象読者</td></tr>
+    </table>
+    <table>
+      <tr><th>audience</th><th>表示テキスト</th><th>背景色</th><th>文字色</th></tr>
+      <tr><td>engineer</td><td>エンジニア向け</td><td>#e8f5e9</td><td>#2e7d32</td></tr>
+      <tr><td>business</td><td>ビジネス向け</td><td>#ede7f6</td><td>#512da8</td></tr>
+      <tr><td>general</td><td>一般向け</td><td>#fce4ec</td><td>#ad1457</td></tr>
+      <tr><td>researcher</td><td>研究者向け</td><td>#e0f7fa</td><td>#00695c</td></tr>
+    </table>
+
+    <hr />
+
+    <h2 id="responsive">5. レスポンシブ対応</h2>
+    <table>
+      <tr><th>ブレークポイント</th><th>幅</th><th>変更内容</th></tr>
+      <tr><td>モバイル</td><td>〜 639px</td><td>記事カード1カラム。フィルターバーはスクロール可能な横並び</td></tr>
+      <tr><td>タブレット</td><td>640px 〜 1023px</td><td>記事カード2カラム</td></tr>
+      <tr><td>デスクトップ</td><td>1024px 〜</td><td>記事カード最大3カラム。詳細ページはmax-width: 800px で中央寄せ</td></tr>
+    </table>
+    <p>詳細ページのポイントまとめは、モバイルでは2カラムを1カラムに変更する。</p>
+
+  </div>
+
+  <div class="footer">
+    claude-blog-explanation-jp 画面設計書 v1.0.0 ／ 2026-05-27
+  </div>
+</div>
+</body>
+</html>

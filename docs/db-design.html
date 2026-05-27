@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB設計書 — claude-blog-explanation-jp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; font-size: 15px; line-height: 1.8; color: #1a1a2e; background: #f8f9fc; padding: 40px 20px; }
+    .container { max-width: 1000px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 48px 48px 36px; }
+    .header h1 { font-size: 26px; font-weight: 700; }
+    .header .subtitle { margin-top: 8px; font-size: 14px; opacity: .75; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .meta-item { background: rgba(255,255,255,.1); border-radius: 8px; padding: 12px 16px; }
+    .meta-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+    .meta-item .value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .body { padding: 48px; }
+    h2 { font-size: 20px; font-weight: 700; color: #0f3460; border-left: 4px solid #0f3460; padding-left: 14px; margin: 40px 0 20px; }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin: 28px 0 12px; }
+    p { margin-bottom: 12px; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    th { background: #f0f4ff; color: #0f3460; font-weight: 700; text-align: left; padding: 10px 14px; border: 1px solid #d8e2ff; }
+    td { padding: 10px 14px; border: 1px solid #e8ecf4; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafbff; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; color: #333; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: #f4f6fb; padding: 2px 6px; border-radius: 4px; color: #c0392b; }
+    pre { background: #1e2a3a; color: #e2e8f0; border-radius: 8px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; }
+    pre code { background: none; color: inherit; padding: 0; font-size: 13px; line-height: 1.7; }
+    .callout { background: #f0f4ff; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+    .callout.warn { background: #fff8e1; border-left-color: #f59e0b; }
+    hr { border: none; border-top: 2px solid #f0f2f8; margin: 40px 0; }
+    .toc { background: #f8f9fc; border: 1px solid #e0e7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 14px; font-weight: 700; color: #0f3460; margin: 0 0 12px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { font-size: 14px; margin-bottom: 4px; }
+    .toc a { color: #0f3460; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .footer { background: #f8f9fc; padding: 24px 48px; border-top: 1px solid #e8ecf4; font-size: 13px; color: #888; }
+    .collection-header { background: #f0f4ff; border: 1px solid #d8e2ff; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .collection-name { font-size: 18px; font-weight: 700; color: #0f3460; font-family: "SFMono-Regular", Consolas, monospace; }
+    .collection-desc { font-size: 14px; color: #555; }
+    .required-badge { display: inline-block; background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 700; }
+    .optional-badge { display: inline-block; background: #f0f0f0; color: #555; border: 1px solid #ccc; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>DB設計書（Firestore）</h1>
+    <div class="subtitle">claude-blog-explanation-jp</div>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">作成日</div><div class="value">2026-05-27</div></div>
+      <div class="meta-item"><div class="label">ステータス</div><div class="value">Draft</div></div>
+      <div class="meta-item"><div class="label">バージョン</div><div class="value">1.0.0</div></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="toc">
+      <h3>目次</h3>
+      <ol>
+        <li><a href="#overview">概要</a></li>
+        <li><a href="#articles">articles コレクション</a></li>
+        <li><a href="#crawl_log">crawl_log コレクション</a></li>
+        <li><a href="#indexes">インデックス設計</a></li>
+        <li><a href="#security">セキュリティルール</a></li>
+        <li><a href="#sample">サンプルドキュメント</a></li>
+      </ol>
+    </div>
+
+    <h2 id="overview">1. 概要</h2>
+    <p>Firebase Firestore（NoSQL ドキュメントDB）を使用する。コレクションは <code>articles</code>（公開記事）と <code>crawl_log</code>（クロール管理）の2つ。</p>
+    <table>
+      <tr><th>コレクション</th><th>用途</th><th>想定ドキュメント数</th><th>読み書き</th></tr>
+      <tr><td><code>articles</code></td><td>翻訳・解説済みの公開記事データ</td><td>100〜500件（積み上がり）</td><td>読み: Web 表示時 / 書き: バッチのみ</td></tr>
+      <tr><td><code>crawl_log</code></td><td>クロール済みURLの管理・重複防止</td><td>articles と同件数</td><td>読み書き: バッチのみ</td></tr>
+    </table>
+
+    <hr />
+
+    <h2 id="articles">2. articles コレクション</h2>
+
+    <div class="collection-header">
+      <span class="collection-name">articles/{articleId}</span>
+      <span class="collection-desc">翻訳・解説済みの記事データ。ドキュメントIDは Firestore が自動生成する。</span>
+    </div>
+
+    <table>
+      <tr><th>フィールド名</th><th>型</th><th>必須</th><th>説明</th></tr>
+      <tr>
+        <td><code>originalUrl</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>原文URL（例: <code>https://claude.com/blog/claude-4</code>）。クロール時の重複チェックには使わず crawl_log を使用する</td>
+      </tr>
+      <tr>
+        <td><code>originalTitle</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>原文タイトル（英語）</td>
+      </tr>
+      <tr>
+        <td><code>author</code></td>
+        <td>string</td>
+        <td><span class="optional-badge">任意</span></td>
+        <td>著者名。取得できない場合は "Anthropic Team"</td>
+      </tr>
+      <tr>
+        <td><code>category</code></td>
+        <td>string</td>
+        <td><span class="optional-badge">任意</span></td>
+        <td>原文カテゴリ。取得できない場合は空文字</td>
+      </tr>
+      <tr>
+        <td><code>originalPublishedAt</code></td>
+        <td>timestamp | null</td>
+        <td><span class="optional-badge">任意</span></td>
+        <td>原文の公開日時。取得できない場合は null</td>
+      </tr>
+      <tr>
+        <td><code>japaneseTitle</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>Claude API が生成した日本語タイトル</td>
+      </tr>
+      <tr>
+        <td><code>summary</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>3〜5行の要約（プレーンテキスト）</td>
+      </tr>
+      <tr>
+        <td><code>detailedExplanation</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>詳細解説（Markdown 形式）。フロントエンドで react-markdown でレンダリング</td>
+      </tr>
+      <tr>
+        <td><code>keyPointsEngineer</code></td>
+        <td>string[]</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>エンジニア向けポイントの配列（5〜8項目）</td>
+      </tr>
+      <tr>
+        <td><code>keyPointsBusiness</code></td>
+        <td>string[]</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>ビジネス向けポイントの配列（5〜8項目）</td>
+      </tr>
+      <tr>
+        <td><code>japanUseCases</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>日本での活用イメージ（Markdown 形式）</td>
+      </tr>
+      <tr>
+        <td><code>targetAudience</code></td>
+        <td>string[]</td>
+        <td><span class="required-badge">必須</span></td>
+        <td><code>"engineer" | "business" | "general" | "researcher"</code> の組み合わせ（1〜複数）</td>
+      </tr>
+      <tr>
+        <td><code>importanceScore</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td><code>"S" | "A" | "B" | "C"</code> のいずれか</td>
+      </tr>
+      <tr>
+        <td><code>importanceReason</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>重要度判定の根拠（1〜2文）</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td><code>"published" | "error"</code>。生成成功時は "published"、失敗時は "error"</td>
+      </tr>
+      <tr>
+        <td><code>createdAt</code></td>
+        <td>timestamp</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>Firestore に保存した日時（<code>serverTimestamp()</code>）</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <code>detailedExplanation</code> と <code>japanUseCases</code> は長文（数千文字）になる場合がある。Firestore の1ドキュメントサイズ上限は 1MB であり、通常の記事では問題ないが、極端に長い原文の場合は注意が必要。
+    </div>
+
+    <hr />
+
+    <h2 id="crawl_log">3. crawl_log コレクション</h2>
+
+    <div class="collection-header">
+      <span class="collection-name">crawl_log/{docId}</span>
+      <span class="collection-desc">クロール済みURLを管理し重複処理を防ぐ。ドキュメントIDは URL を Base64 エンコードしたものを使用する（URL をそのままIDにすると / が含まれ階層になるため）。</span>
+    </div>
+
+    <table>
+      <tr><th>フィールド名</th><th>型</th><th>必須</th><th>説明</th></tr>
+      <tr>
+        <td><code>url</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>クロール済み記事URL</td>
+      </tr>
+      <tr>
+        <td><code>articleId</code></td>
+        <td>string | null</td>
+        <td><span class="optional-badge">任意</span></td>
+        <td>生成された articles ドキュメントID。エラー時は null</td>
+      </tr>
+      <tr>
+        <td><code>status</code></td>
+        <td>string</td>
+        <td><span class="required-badge">必須</span></td>
+        <td><code>"success" | "error"</code></td>
+      </tr>
+      <tr>
+        <td><code>errorMessage</code></td>
+        <td>string | null</td>
+        <td><span class="optional-badge">任意</span></td>
+        <td>エラー時のメッセージ。成功時は null</td>
+      </tr>
+      <tr>
+        <td><code>retryCount</code></td>
+        <td>number</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>リトライ回数（初回成功は 0）</td>
+      </tr>
+      <tr>
+        <td><code>crawledAt</code></td>
+        <td>timestamp</td>
+        <td><span class="required-badge">必須</span></td>
+        <td>クロール実行日時（<code>serverTimestamp()</code>）</td>
+      </tr>
+    </table>
+
+    <h3>ドキュメントIDの生成方法</h3>
+    <pre><code>// URL を Base64 エンコードしてドキュメントIDとして使用する
+// Firestore のIDに使えない文字（/ 等）を回避するため
+function urlToDocId(url: string): string {
+  return Buffer.from(url).toString("base64url");
+}</code></pre>
+
+    <hr />
+
+    <h2 id="indexes">4. インデックス設計</h2>
+
+    <h3>4-1. 複合インデックス</h3>
+    <table>
+      <tr><th>コレクション</th><th>フィールド1</th><th>フィールド2</th><th>用途</th></tr>
+      <tr>
+        <td><code>articles</code></td>
+        <td><code>status</code> ASC</td>
+        <td><code>importanceScore</code> ASC</td>
+        <td>公開記事を重要度順に取得（一覧ページ・フィルター）</td>
+      </tr>
+      <tr>
+        <td><code>articles</code></td>
+        <td><code>status</code> ASC</td>
+        <td><code>createdAt</code> DESC</td>
+        <td>公開記事を新着順に取得（将来の新着順ソート用）</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      Firestore は配列フィールド（<code>targetAudience</code>）に対して <code>array-contains</code> クエリを使用できる。対象読者フィルターは <code>where("targetAudience", "array-contains", "engineer")</code> で実装する。ただし <code>array-contains</code> と他の複合クエリを組み合わせる場合は追加インデックスが必要になる場合がある。
+    </div>
+
+    <h3>4-2. 単一フィールドインデックス（自動作成）</h3>
+    <p>Firestore は各フィールドに対して自動的に単一フィールドインデックスを作成する。以下のクエリは追加設定なしで動作する。</p>
+    <ul>
+      <li><code>where("status", "==", "published")</code></li>
+      <li><code>where("importanceScore", "==", "S")</code></li>
+      <li><code>where("targetAudience", "array-contains", "engineer")</code></li>
+      <li><code>orderBy("createdAt", "desc")</code></li>
+    </ul>
+
+    <hr />
+
+    <h2 id="security">5. セキュリティルール</h2>
+    <pre><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // articles コレクション
+    // 読み取り: 全公開（認証不要）
+    // 書き込み: 禁止（サーバーサイドの API Routes からのみ書き込む）
+    match /articles/{articleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // crawl_log コレクション
+    // 読み書き: 禁止（サーバーサイドの API Routes からのみアクセス）
+    match /crawl_log/{logId} {
+      allow read, write: if false;
+    }
+  }
+}</code></pre>
+
+    <div class="callout warn">
+      クライアントからの直接書き込みを <code>allow write: if false</code> で禁止している。サーバーサイド（Next.js API Routes）からは Firebase Client SDK がサーバー上で動くため、セキュリティルールが適用される点に注意。将来的に Admin SDK に移行する場合はセキュリティルールはバイパスされるため、この点を考慮すること。
+    </div>
+
+    <hr />
+
+    <h2 id="sample">6. サンプルドキュメント</h2>
+
+    <h3>articles/{id} サンプル</h3>
+    <pre><code>{
+  "originalUrl": "https://claude.com/blog/claude-4-announcement",
+  "originalTitle": "Introducing Claude 4: A New Frontier in AI Performance",
+  "author": "Anthropic Team",
+  "category": "Product",
+  "originalPublishedAt": "2026-05-20T09:00:00Z",
+  "japaneseTitle": "Claude 4 発表：新モデルの性能と API 変更点を詳解",
+  "summary": "Anthropic が Claude 4 シリーズを発表しました。Opus・Sonnet・Haiku の3モデルが同時リリースされ、特にコーディング・数学的推論能力が前世代比で大幅に向上しています。API の一部 breaking changes が含まれるため、既存ユーザーは移行ガイドの確認が必要です。",
+  "detailedExplanation": "## モデル性能の向上\n\nClaude 4 Opus は SWE-bench において...",
+  "keyPointsEngineer": [
+    "SWE-bench スコアが前世代比 +15% に向上",
+    "thinking パラメータの仕様変更（breaking change）",
+    "並列 Tool Use がデフォルト有効に",
+    "移行ガイドは公式ドキュメントを参照"
+  ],
+  "keyPointsBusiness": [
+    "Haiku 4 は前世代比コスト -30%",
+    "企業向け API の SLA が向上",
+    "日本語性能が大幅に改善",
+    "既存の契約・料金体系への影響なし"
+  ],
+  "japanUseCases": "## 金融・法律分野での活用\n\n日本語性能の向上により...",
+  "targetAudience": ["engineer", "business"],
+  "importanceScore": "S",
+  "importanceReason": "新モデルシリーズのリリースで API breaking changes を含む。既存ユーザーは即時対応が必要。",
+  "status": "published",
+  "createdAt": "2026-05-27T06:05:32Z"
+}</code></pre>
+
+    <h3>crawl_log/{docId} サンプル（成功時）</h3>
+    <pre><code>{
+  "url": "https://claude.com/blog/claude-4-announcement",
+  "articleId": "abc123xyz",
+  "status": "success",
+  "errorMessage": null,
+  "retryCount": 0,
+  "crawledAt": "2026-05-27T06:05:00Z"
+}</code></pre>
+
+    <h3>crawl_log/{docId} サンプル（エラー時）</h3>
+    <pre><code>{
+  "url": "https://claude.com/blog/some-article",
+  "articleId": null,
+  "status": "error",
+  "errorMessage": "Failed to parse HTML: selector h1.article-title not found",
+  "retryCount": 3,
+  "crawledAt": "2026-05-27T06:10:00Z"
+}</code></pre>
+
+  </div>
+
+  <div class="footer">
+    claude-blog-explanation-jp DB設計書 v1.0.0 ／ 2026-05-27
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>アーキテクチャ設計書 — claude-blog-explanation-jp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; font-size: 15px; line-height: 1.8; color: #1a1a2e; background: #f8f9fc; padding: 40px 20px; }
+    .container { max-width: 1000px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 48px 48px 36px; }
+    .header h1 { font-size: 26px; font-weight: 700; }
+    .header .subtitle { margin-top: 8px; font-size: 14px; opacity: .75; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .meta-item { background: rgba(255,255,255,.1); border-radius: 8px; padding: 12px 16px; }
+    .meta-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+    .meta-item .value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .body { padding: 48px; }
+    h2 { font-size: 20px; font-weight: 700; color: #0f3460; border-left: 4px solid #0f3460; padding-left: 14px; margin: 40px 0 20px; }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin: 28px 0 12px; }
+    p { margin-bottom: 12px; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    th { background: #f0f4ff; color: #0f3460; font-weight: 700; text-align: left; padding: 10px 14px; border: 1px solid #d8e2ff; }
+    td { padding: 10px 14px; border: 1px solid #e8ecf4; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafbff; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; color: #333; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: #f4f6fb; padding: 2px 6px; border-radius: 4px; color: #c0392b; }
+    pre { background: #1e2a3a; color: #e2e8f0; border-radius: 8px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; }
+    pre code { background: none; color: inherit; padding: 0; font-size: 13px; line-height: 1.7; }
+    .callout { background: #f0f4ff; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+    .callout.warn { background: #fff8e1; border-left-color: #f59e0b; }
+    hr { border: none; border-top: 2px solid #f0f2f8; margin: 40px 0; }
+    .toc { background: #f8f9fc; border: 1px solid #e0e7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 14px; font-weight: 700; color: #0f3460; margin: 0 0 12px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { font-size: 14px; margin-bottom: 4px; }
+    .toc a { color: #0f3460; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .footer { background: #f8f9fc; padding: 24px 48px; border-top: 1px solid #e8ecf4; font-size: 13px; color: #888; }
+
+    /* アーキテクチャ図 */
+    .arch-diagram { background: #f8faff; border: 1px solid #d8e2ff; border-radius: 12px; padding: 32px; margin: 24px 0; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; line-height: 2; color: #1a1a2e; overflow-x: auto; }
+    .arch-box { display: inline-block; background: #fff; border: 2px solid #0f3460; border-radius: 8px; padding: 6px 14px; font-weight: 700; color: #0f3460; }
+    .arch-box.external { border-color: #6c757d; color: #6c757d; background: #f8f9fa; }
+    .arch-box.store { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
+    .arch-box.api { border-color: #10b981; color: #065f46; background: #ecfdf5; }
+    .arch-box.cron { border-color: #8b5cf6; color: #4c1d95; background: #f5f3ff; }
+    .arch-arrow { color: #6b7280; padding: 0 8px; }
+    .flow-row { display: flex; align-items: center; gap: 0; margin: 8px 0; flex-wrap: wrap; }
+    .flow-section { margin: 20px 0; }
+    .flow-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin-bottom: 8px; }
+    .layer-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #9ca3af; width: 100px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>アーキテクチャ設計書</h1>
+    <div class="subtitle">claude-blog-explanation-jp</div>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">作成日</div><div class="value">2026-05-27</div></div>
+      <div class="meta-item"><div class="label">ステータス</div><div class="value">Draft</div></div>
+      <div class="meta-item"><div class="label">バージョン</div><div class="value">1.0.0</div></div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="toc">
+      <h3>目次</h3>
+      <ol>
+        <li><a href="#overview">システム概要</a></li>
+        <li><a href="#components">コンポーネント構成</a></li>
+        <li><a href="#dataflow">データフロー</a></li>
+        <li><a href="#directory">ディレクトリ構成</a></li>
+        <li><a href="#env">環境変数</a></li>
+        <li><a href="#deploy">デプロイ構成</a></li>
+        <li><a href="#security">セキュリティ</a></li>
+      </ol>
+    </div>
+
+    <h2 id="overview">1. システム概要</h2>
+    <p>本システムは「クロール・生成バッチ」と「記事表示 Web アプリ」の2つのサブシステムで構成される。どちらも単一の Next.js プロジェクトに同居させ、Vercel 上にデプロイする。</p>
+
+    <div class="arch-diagram">
+      <div class="flow-section">
+        <div class="flow-section-title">バッチフロー（毎日 6:00 JST）</div>
+        <div class="flow-row">
+          <span class="arch-box cron">Vercel Cron</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box">API Route<br>/api/cron/crawl</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box external">claude.com/blog</span>
+        </div>
+        <div style="margin: 4px 0 4px 160px; color: #6b7280;">↓ 新着記事の本文</div>
+        <div class="flow-row" style="margin-left:160px;">
+          <span class="arch-box api">Claude API<br>(claude-opus-4-7)</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box store">Firestore<br>articles / crawl_log</span>
+        </div>
+      </div>
+      <div class="flow-section" style="margin-top:28px;">
+        <div class="flow-section-title">表示フロー（ユーザーアクセス時）</div>
+        <div class="flow-row">
+          <span class="arch-box external">ユーザー<br>ブラウザ</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box">Next.js<br>App Router (ISR)</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box store">Firestore<br>articles</span>
+        </div>
+      </div>
+      <div class="flow-section" style="margin-top:28px;">
+        <div class="flow-section-title">初回遡及取得（手動・初回のみ）</div>
+        <div class="flow-row">
+          <span class="arch-box cron">scripts/<br>seed.mjs</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box external">claude.com/blog<br>（全件）</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box api">Claude API</span>
+          <span class="arch-arrow">──▶</span>
+          <span class="arch-box store">Firestore</span>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2 id="components">2. コンポーネント構成</h2>
+
+    <h3>2-1. フロントエンド（Next.js App Router）</h3>
+    <table>
+      <tr><th>パス</th><th>役割</th><th>レンダリング</th></tr>
+      <tr><td><code>src/app/page.tsx</code></td><td>記事一覧ページ。重要度・対象読者でフィルタリング可能</td><td>ISR（revalidate: 3600）</td></tr>
+      <tr><td><code>src/app/articles/[id]/page.tsx</code></td><td>記事詳細ページ。Markdown をレンダリング</td><td>ISR（revalidate: 3600）</td></tr>
+      <tr><td><code>src/components/ArticleCard.tsx</code></td><td>一覧用カードコンポーネント。バッジ・タイトル・要約を表示</td><td>—</td></tr>
+      <tr><td><code>src/components/ArticleDetail.tsx</code></td><td>詳細ページのコンテンツコンポーネント</td><td>—</td></tr>
+      <tr><td><code>src/components/FilterBar.tsx</code></td><td>重要度・対象読者フィルターUI（Client Component）</td><td>—</td></tr>
+      <tr><td><code>src/components/ImportanceBadge.tsx</code></td><td>重要度バッジ（S/A/B/C のスタイル付き）</td><td>—</td></tr>
+      <tr><td><code>src/components/AudienceBadge.tsx</code></td><td>対象読者バッジ</td><td>—</td></tr>
+    </table>
+
+    <h3>2-2. バッチ処理（API Routes）</h3>
+    <table>
+      <tr><th>パス</th><th>役割</th><th>認証</th></tr>
+      <tr><td><code>src/app/api/cron/crawl/route.ts</code></td><td>Vercel Cron から呼び出されるクロールエントリーポイント</td><td>CRON_SECRET ヘッダー</td></tr>
+    </table>
+
+    <h3>2-3. ライブラリ層（src/lib/）</h3>
+    <table>
+      <tr><th>ファイル</th><th>役割</th></tr>
+      <tr><td><code>firebase.ts</code></td><td>Firebase 初期化・Firestore / Auth インスタンスのエクスポート</td></tr>
+      <tr><td><code>firestore.ts</code></td><td>Firestore CRUD（articles・crawl_log の読み書き）</td></tr>
+      <tr><td><code>crawler.ts</code></td><td>claude.com/blog のクロール・HTML パース（cheerio）</td></tr>
+      <tr><td><code>generator.ts</code></td><td>Claude API 呼び出し・翻訳解説生成・JSON パース</td></tr>
+      <tr><td><code>anthropic.ts</code></td><td>Anthropic SDK 初期化・インスタンスのエクスポート</td></tr>
+    </table>
+
+    <h3>2-4. スクリプト（scripts/）</h3>
+    <table>
+      <tr><th>ファイル</th><th>役割</th></tr>
+      <tr><td><code>seed.mjs</code></td><td>初回遡及取得スクリプト。全件を順次処理（2秒インターバル）</td></tr>
+    </table>
+
+    <hr />
+
+    <h2 id="dataflow">3. データフロー詳細</h2>
+
+    <h3>3-1. バッチ処理フロー</h3>
+    <pre><code>Vercel Cron (6:00 JST)
+  └─▶ GET /api/cron/crawl
+        │
+        ├─ 1. crawler.ts: claude.com/blog をクロールして記事URLリストを取得
+        │
+        ├─ 2. firestore.ts: crawl_log から処理済みURLを取得
+        │
+        ├─ 3. 差分（未処理URL）を抽出
+        │
+        └─ 4. 各未処理URLに対して順次処理:
+              a. crawler.ts: 記事本文・メタ情報を取得
+              b. generator.ts: Claude API に翻訳・解説・スコアリングを依頼
+              c. firestore.ts: articles コレクションに保存
+              d. firestore.ts: crawl_log に処理済みとして記録</code></pre>
+
+    <h3>3-2. Claude API への入出力</h3>
+    <p>1回の API 呼び出しで翻訳・解説・メタ情報をすべて生成する。出力は JSON スキーマで構造化する。</p>
+    <pre><code>// 入力（プロンプト概略）
+{
+  role: "user",
+  content: `
+    以下の Anthropic 公式ブログ記事を日本語に翻訳・解説してください。
+    出力は指定の JSON スキーマに従ってください。
+
+    # 原文
+    タイトル: {originalTitle}
+    著者: {author}
+    カテゴリ: {category}
+    公開日: {publishedAt}
+
+    {originalContent}
+  `
+}
+
+// 出力（JSON スキーマ）
+{
+  japaneseTitle: string,
+  summary: string,                  // 3〜5行
+  detailedExplanation: string,      // Markdown
+  keyPointsEngineer: string[],      // 5〜8項目
+  keyPointsBusiness: string[],      // 5〜8項目
+  japanUseCases: string,            // Markdown
+  targetAudience: ("engineer" | "business" | "general" | "researcher")[],
+  importanceScore: "S" | "A" | "B" | "C",
+  importanceReason: string          // 1〜2文
+}</code></pre>
+
+    <h3>3-3. 表示フロー</h3>
+    <pre><code>ユーザーが / にアクセス
+  └─▶ Next.js ISR: Firestore から articles を取得（importanceScore 降順）
+        └─▶ ArticleCard × N を表示
+              └─▶ ユーザーがカードをクリック
+                    └─▶ /articles/[id] にアクセス
+                          └─▶ Next.js ISR: Firestore から articles/{id} を取得
+                                └─▶ ArticleDetail を表示（Markdown レンダリング）</code></pre>
+
+    <hr />
+
+    <h2 id="directory">4. ディレクトリ構成</h2>
+    <pre><code>claude-blog-explanation-jp/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx              # ルートレイアウト
+│   │   ├── page.tsx                # 記事一覧（ISR）
+│   │   ├── articles/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx        # 記事詳細（ISR）
+│   │   └── api/
+│   │       └── cron/
+│   │           └── crawl/
+│   │               └── route.ts    # Vercel Cron エンドポイント
+│   ├── components/
+│   │   ├── ArticleCard.tsx
+│   │   ├── ArticleDetail.tsx
+│   │   ├── FilterBar.tsx           # Client Component
+│   │   ├── ImportanceBadge.tsx
+│   │   └── AudienceBadge.tsx
+│   ├── lib/
+│   │   ├── firebase.ts
+│   │   ├── firestore.ts
+│   │   ├── crawler.ts
+│   │   ├── generator.ts
+│   │   └── anthropic.ts
+│   └── types/
+│       └── article.ts              # Article 型定義
+├── scripts/
+│   └── seed.mjs                    # 初回遡及取得スクリプト
+├── docs/
+│   ├── requirements.html
+│   ├── architecture.html
+│   ├── screen-design.html
+│   ├── batch-design.html
+│   └── db-design.html
+├── vercel.json                     # Cron 設定
+├── .env.local                      # ローカル環境変数（gitignore）
+└── package.json</code></pre>
+
+    <hr />
+
+    <h2 id="env">5. 環境変数</h2>
+    <table>
+      <tr><th>変数名</th><th>用途</th><th>設定場所</th></tr>
+      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Claude API 認証キー</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>CRON_SECRET</code></td><td>Cron エンドポイント不正アクセス防止トークン</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_API_KEY</code></td><td>Firebase API Key</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN</code></td><td>Firebase Auth Domain</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_PROJECT_ID</code></td><td>Firebase Project ID</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET</code></td><td>Firebase Storage Bucket</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID</code></td><td>Firebase Messaging Sender ID</td><td>Vercel 環境変数・.env.local</td></tr>
+      <tr><td><code>NEXT_PUBLIC_FIREBASE_APP_ID</code></td><td>Firebase App ID</td><td>Vercel 環境変数・.env.local</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>注意:</strong> <code>ANTHROPIC_API_KEY</code> と <code>CRON_SECRET</code> は <code>NEXT_PUBLIC_</code> プレフィックスを付けない。サーバーサイドのみで使用し、クライアントに漏洩させない。
+    </div>
+
+    <hr />
+
+    <h2 id="deploy">6. デプロイ構成</h2>
+
+    <h3>6-1. Vercel プロジェクト設定</h3>
+    <table>
+      <tr><th>項目</th><th>値</th></tr>
+      <tr><td>フレームワーク</td><td>Next.js</td></tr>
+      <tr><td>ブランチ</td><td>main（本番）</td></tr>
+      <tr><td>Node.js バージョン</td><td>20.x</td></tr>
+      <tr><td>ビルドコマンド</td><td><code>npm run build</code></td></tr>
+      <tr><td>出力ディレクトリ</td><td>.next（自動検出）</td></tr>
+    </table>
+
+    <h3>6-2. vercel.json（Cron 設定）</h3>
+    <pre><code>{
+  "crons": [
+    {
+      "path": "/api/cron/crawl",
+      "schedule": "0 21 * * *"
+    }
+  ]
+}</code></pre>
+    <p>※ Vercel の Cron は UTC 基準。21:00 UTC = 06:00 JST（UTC+9）</p>
+
+    <div class="callout warn">
+      <strong>Vercel Hobby プランの制限:</strong> Cron Functions は1日1回・実行時間60秒まで。初回遡及取得（100件超）は制限を超えるため、<code>scripts/seed.mjs</code> をローカルから手動実行する。
+    </div>
+
+    <hr />
+
+    <h2 id="security">7. セキュリティ</h2>
+
+    <h3>7-1. Cron エンドポイントの保護</h3>
+    <p>不正なリクエストによる API 乱用を防ぐため、<code>Authorization</code> ヘッダーで <code>CRON_SECRET</code> を検証する。Vercel Cron は自動的に <code>Authorization: Bearer {CRON_SECRET}</code> を付与する。</p>
+    <pre><code>// /api/cron/crawl/route.ts
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  // ...
+}</code></pre>
+
+    <h3>7-2. Firestore セキュリティルール</h3>
+    <p>記事データは全公開読み取り。書き込みはサーバーサイド（API Routes）からのみ許可するため、クライアントからの直接書き込みを禁止する。</p>
+    <pre><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // articles: 誰でも読み取り可能、書き込みは不可（サーバーサイドのみ）
+    match /articles/{articleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // crawl_log: 読み書き不可（サーバーサイドのみ）
+    match /crawl_log/{logId} {
+      allow read, write: if false;
+    }
+  }
+}</code></pre>
+    <div class="callout">
+      サーバーサイドからの書き込みは Firebase Client SDK（サーバー上で動く Next.js API Routes）を使う。Admin SDK への移行は将来的な選択肢として保留。
+    </div>
+
+  </div>
+
+  <div class="footer">
+    claude-blog-explanation-jp アーキテクチャ設計書 v1.0.0 ／ 2026-05-27
+  </div>
+</div>
+</body>
+</html>

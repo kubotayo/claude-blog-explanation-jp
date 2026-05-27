@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>要件定義書 — claude-blog-explanation-jp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; font-size: 15px; line-height: 1.8; color: #1a1a2e; background: #f8f9fc; padding: 40px 20px; }
+    .container { max-width: 960px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; padding: 48px 48px 36px; }
+    .header h1 { font-size: 26px; font-weight: 700; letter-spacing: .02em; }
+    .header .subtitle { margin-top: 8px; font-size: 14px; opacity: .75; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .meta-item { background: rgba(255,255,255,.1); border-radius: 8px; padding: 12px 16px; }
+    .meta-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+    .meta-item .value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .body { padding: 48px; }
+    h2 { font-size: 20px; font-weight: 700; color: #0f3460; border-left: 4px solid #0f3460; padding-left: 14px; margin: 40px 0 20px; }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin: 28px 0 12px; }
+    p { margin-bottom: 12px; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    th { background: #f0f4ff; color: #0f3460; font-weight: 700; text-align: left; padding: 10px 14px; border: 1px solid #d8e2ff; }
+    td { padding: 10px 14px; border: 1px solid #e8ecf4; vertical-align: top; }
+    tr:nth-child(even) td { background: #fafbff; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; color: #333; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-s { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb; }
+    .badge-a { background: #fff8e1; color: #b7700d; border: 1px solid #ffd591; }
+    .badge-b { background: #e8f4fd; color: #1a6fa8; border: 1px solid #bee3f8; }
+    .badge-c { background: #f0f0f0; color: #555; border: 1px solid #ccc; }
+    .badge-eng { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .badge-biz { background: #ede7f6; color: #512da8; border: 1px solid #ce93d8; }
+    .badge-gen { background: #fce4ec; color: #ad1457; border: 1px solid #f48fb1; }
+    .badge-res { background: #e0f7fa; color: #00695c; border: 1px solid #80cbc4; }
+    .callout { background: #f0f4ff; border-left: 4px solid #0f3460; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+    .callout.warn { background: #fff8e1; border-left-color: #f59e0b; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; background: #f4f6fb; padding: 2px 6px; border-radius: 4px; color: #c0392b; }
+    pre { background: #1e2a3a; color: #e2e8f0; border-radius: 8px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; }
+    pre code { background: none; color: inherit; padding: 0; font-size: 13px; line-height: 1.7; }
+    .section-divider { border: none; border-top: 2px solid #f0f2f8; margin: 40px 0; }
+    .article-preview { border: 1px solid #e0e7ff; border-radius: 10px; overflow: hidden; margin: 20px 0; }
+    .article-preview-header { background: #f5f7ff; padding: 14px 18px; border-bottom: 1px solid #e0e7ff; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .article-preview-body { padding: 16px 18px; }
+    .article-preview-body h4 { font-size: 16px; color: #0f3460; margin-bottom: 8px; }
+    .article-preview-body p { font-size: 14px; color: #555; margin-bottom: 8px; }
+    .article-preview-body ul { font-size: 14px; color: #555; }
+    .toc { background: #f8f9fc; border: 1px solid #e0e7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h3 { font-size: 14px; font-weight: 700; color: #0f3460; margin: 0 0 12px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { font-size: 14px; margin-bottom: 4px; }
+    .toc a { color: #0f3460; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .cost-table td:last-child { font-weight: 600; color: #0f3460; }
+    .footer { background: #f8f9fc; padding: 24px 48px; border-top: 1px solid #e8ecf4; font-size: 13px; color: #888; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <h1>要件定義書</h1>
+    <div class="subtitle">claude-blog-explanation-jp</div>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">作成日</div>
+        <div class="value">2026-05-27</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">ステータス</div>
+        <div class="value">Draft</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">バージョン</div>
+        <div class="value">1.0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 本文 -->
+  <div class="body">
+
+    <!-- 目次 -->
+    <div class="toc">
+      <h3>目次</h3>
+      <ol>
+        <li><a href="#overview">プロジェクト概要</a></li>
+        <li><a href="#article-format">記事フォーマット仕様</a></li>
+        <li><a href="#functional">機能要件</a></li>
+        <li><a href="#data-model">データモデル</a></li>
+        <li><a href="#nonfunctional">非機能要件</a></li>
+        <li><a href="#tech-stack">技術スタック</a></li>
+        <li><a href="#cost">コスト試算</a></li>
+        <li><a href="#out-of-scope">スコープ外</a></li>
+      </ol>
+    </div>
+
+    <!-- 1. 概要 -->
+    <h2 id="overview">1. プロジェクト概要</h2>
+    <p>
+      <a href="https://claude.com/blog/" target="_blank">https://claude.com/blog/</a> に投稿されている Anthropic の公式ブログ記事を自動で取得し、Claude API を使って日本語に翻訳・解説した記事を自社 Web サイトに公開するシステム。
+    </p>
+    <p>読者が記事を見たときに <strong>「内容の詳細」「誰向けか」「どのくらい重要か」</strong> が一目でわかる記事フォーマットを提供することを最重要要件とする。</p>
+
+    <h3>ゴール</h3>
+    <ul>
+      <li>Anthropic の最新情報を日本語で素早くキャッチアップできる場を提供する</li>
+      <li>翻訳だけでなく「解説」として付加価値を加え、日本市場での活用イメージを示す</li>
+      <li>バッチ処理により人手を最小化し、継続的な自動更新を実現する</li>
+    </ul>
+
+    <hr class="section-divider" />
+
+    <!-- 2. 記事フォーマット -->
+    <h2 id="article-format">2. 記事フォーマット仕様</h2>
+    <p>生成される各記事は以下の構成を持つ。このフォーマットが本システムの最重要成果物である。</p>
+
+    <!-- サンプル記事プレビュー -->
+    <div class="article-preview">
+      <div class="article-preview-header">
+        <span class="badge badge-s">重要度 S</span>
+        <span class="badge badge-eng">エンジニア向け</span>
+        <span class="badge badge-biz">ビジネス向け</span>
+        <span style="font-size:13px; color:#888;">2026-05-20 ／ Anthropic Team</span>
+      </div>
+      <div class="article-preview-body">
+        <h4>Claude 4 発表：新モデルの性能と API 変更点を詳解</h4>
+        <p><strong>【要約】</strong> Anthropic が Claude 4 シリーズを発表。Opus・Sonnet・Haiku の3モデルが同時リリースされ、コーディング・推論能力が大幅に向上。API の breaking changes に注意が必要。</p>
+        <ul>
+          <li>エンジニア向けポイント：API 変更点、移行手順</li>
+          <li>ビジネス向けポイント：コスト感、活用シナリオ</li>
+          <li>日本での活用イメージ：国内事例・日本語性能</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>2-1. 記事の構成要素</h3>
+    <table>
+      <tr><th>要素</th><th>内容</th><th>必須</th></tr>
+      <tr><td>メタヘッダー</td><td>重要度スコア・対象読者ラベル・原文タイトル・公開日・著者・カテゴリ・原文URL</td><td>必須</td></tr>
+      <tr><td>日本語タイトル</td><td>原文を意訳した読みやすい日本語タイトル</td><td>必須</td></tr>
+      <tr><td>要約</td><td>3〜5行のエレベーターピッチ。「何について」「なぜ重要か」を端的に伝える</td><td>必須</td></tr>
+      <tr><td>詳細解説</td><td>原文の見出し構造を維持した日本語訳 + 各セクションへの解説者コメント（背景知識・日本市場への示唆）</td><td>必須</td></tr>
+      <tr><td>ポイントまとめ</td><td>対象読者別（エンジニア／ビジネス）の箇条書き、5〜8項目</td><td>必須</td></tr>
+      <tr><td>日本での活用イメージ</td><td>日本のユースケース・文化的文脈を踏まえた実装・活用例</td><td>必須</td></tr>
+      <tr><td>関連記事リンク</td><td>同カテゴリの過去記事へのリンク</td><td>任意</td></tr>
+    </table>
+
+    <h3>2-2. 重要度スコア（S / A / B / C）</h3>
+    <p>Claude API が以下の評価軸をもとに S〜C の4段階で判定する。</p>
+    <table>
+      <tr><th>スコア</th><th>基準</th><th>例</th></tr>
+      <tr><td><span class="badge badge-s">S</span></td><td>新モデル・新機能リリース、API breaking change など即時対応が必要</td><td>Claude 4 発表、Function Calling 変更</td></tr>
+      <tr><td><span class="badge badge-a">A</span></td><td>業界インパクトが高い発表、重要な安全性研究</td><td>新しい料金体系、企業向け機能追加</td></tr>
+      <tr><td><span class="badge badge-b">B</span></td><td>有用な活用事例・技術解説・機能改善</td><td>Prompt Engineering tips、事例紹介</td></tr>
+      <tr><td><span class="badge badge-c">C</span></td><td>一般情報・トピック記事・コミュニティ向け</td><td>カルチャー・採用・イベント告知</td></tr>
+    </table>
+    <p>スコアリングの評価軸：新機能・発表の有無 ／ 業界インパクト ／ 日本市場関連度 ／ 技術的深度</p>
+
+    <h3>2-3. 対象読者ラベル</h3>
+    <p>Claude API が記事本文を分析し、以下のラベルを1つ以上付与する（複数可）。</p>
+    <table>
+      <tr><th>ラベル</th><th>判定基準</th></tr>
+      <tr><td><span class="badge badge-eng">エンジニア向け</span></td><td>コード・API・アーキテクチャの話題が中心</td></tr>
+      <tr><td><span class="badge badge-biz">ビジネス向け</span></td><td>ROI・企業導入事例・ワークフロー効率化が中心</td></tr>
+      <tr><td><span class="badge badge-gen">一般向け</span></td><td>Claude の機能紹介・使い方・社会的トピック</td></tr>
+      <tr><td><span class="badge badge-res">研究者向け</span></td><td>論文・モデルの仕組み・安全性研究が中心</td></tr>
+    </table>
+
+    <hr class="section-divider" />
+
+    <!-- 3. 機能要件 -->
+    <h2 id="functional">3. 機能要件</h2>
+
+    <h3>3-1. クローリング・記事取得</h3>
+    <table>
+      <tr><th>項目</th><th>仕様</th></tr>
+      <tr><td>取得対象URL</td><td><code>https://claude.com/blog/</code> および各記事ページ</td></tr>
+      <tr><td>取得フィールド</td><td>タイトル・本文・著者・公開日・カテゴリ</td></tr>
+      <tr><td>初回実行</td><td>全件遡及取得（100件超を想定）</td></tr>
+      <tr><td>定期実行</td><td>前回取得済みURLとの差分を比較し、新規記事のみ処理対象とする</td></tr>
+      <tr><td>重複チェック</td><td>取得済み記事URLを Firestore に保存し、同一URLは再処理しない</td></tr>
+      <tr><td>エラー時</td><td>最大3回リトライ後、エラーログを Firestore に保存して次回バッチで再試行</td></tr>
+    </table>
+
+    <h3>3-2. 翻訳・解説生成</h3>
+    <table>
+      <tr><th>項目</th><th>仕様</th></tr>
+      <tr><td>利用API</td><td>Claude API（Anthropic）</td></tr>
+      <tr><td>モデル</td><td>claude-opus-4-7（高品質・文脈理解が必要なため）</td></tr>
+      <tr><td>出力形式</td><td>Markdown → Firestore に保存し、フロントエンドでレンダリング</td></tr>
+      <tr><td>同時生成</td><td>翻訳・解説・対象読者判定・重要度スコアリングを1リクエストで生成</td></tr>
+      <tr><td>処理間隔</td><td>初回遡及時は1記事ごとに2秒インターバルを設けAPIレート制限を回避</td></tr>
+    </table>
+
+    <h3>3-3. Web 表示</h3>
+    <table>
+      <tr><th>機能</th><th>仕様</th></tr>
+      <tr><td>記事一覧</td><td>重要度・対象読者ラベルを一覧で表示。重要度順（S→C）でデフォルトソート</td></tr>
+      <tr><td>フィルター</td><td>重要度（S/A/B/C）・対象読者でフィルタリング</td></tr>
+      <tr><td>記事詳細</td><td>セクション2で定義したフォーマットで表示</td></tr>
+      <tr><td>原文リンク</td><td>各記事に原文URLへのリンクを表示</td></tr>
+      <tr><td>キャッシュ</td><td>ISR（revalidate: 3600 秒）で静的配信しつつ新着を反映</td></tr>
+    </table>
+
+    <h3>3-4. バッチ処理フロー</h3>
+    <pre><code>1. Vercel Cron が毎日 6:00 JST に /api/cron/crawl を呼び出す
+2. claude.com/blog/ をクロールして記事URLリストを取得
+3. Firestore の crawl_log と照合し、未処理URLを抽出
+4. 各未処理記事に対して:
+   a. 記事本文を取得
+   b. Claude API に翻訳・解説・メタ情報生成を依頼
+   c. 結果を Firestore の articles コレクションに保存
+   d. crawl_log に処理済みとして記録
+5. 完了ログを Firestore に記録</code></pre>
+
+    <hr class="section-divider" />
+
+    <!-- 4. データモデル -->
+    <h2 id="data-model">4. データモデル（Firestore）</h2>
+
+    <h3>4-1. articles コレクション</h3>
+    <table>
+      <tr><th>フィールド</th><th>型</th><th>説明</th></tr>
+      <tr><td><code>originalUrl</code></td><td>string</td><td>原文URL（ユニークキー）</td></tr>
+      <tr><td><code>originalTitle</code></td><td>string</td><td>原文タイトル（英語）</td></tr>
+      <tr><td><code>author</code></td><td>string</td><td>著者名</td></tr>
+      <tr><td><code>category</code></td><td>string</td><td>原文カテゴリ</td></tr>
+      <tr><td><code>originalPublishedAt</code></td><td>timestamp</td><td>原文公開日</td></tr>
+      <tr><td><code>japaneseTitle</code></td><td>string</td><td>日本語タイトル</td></tr>
+      <tr><td><code>summary</code></td><td>string</td><td>3〜5行の要約（日本語）</td></tr>
+      <tr><td><code>detailedExplanation</code></td><td>string</td><td>詳細解説（Markdown）</td></tr>
+      <tr><td><code>keyPointsEngineer</code></td><td>string[]</td><td>エンジニア向けポイント</td></tr>
+      <tr><td><code>keyPointsBusiness</code></td><td>string[]</td><td>ビジネス向けポイント</td></tr>
+      <tr><td><code>japanUseCases</code></td><td>string</td><td>日本での活用イメージ（Markdown）</td></tr>
+      <tr><td><code>targetAudience</code></td><td>string[]</td><td>["engineer", "business", "general", "researcher"] から複数選択</td></tr>
+      <tr><td><code>importanceScore</code></td><td>string</td><td>"S" | "A" | "B" | "C"</td></tr>
+      <tr><td><code>importanceReason</code></td><td>string</td><td>重要度判定の根拠（1〜2文）</td></tr>
+      <tr><td><code>status</code></td><td>string</td><td>"published" | "error"</td></tr>
+      <tr><td><code>createdAt</code></td><td>timestamp</td><td>レコード作成日時</td></tr>
+    </table>
+
+    <h3>4-2. crawl_log コレクション</h3>
+    <table>
+      <tr><th>フィールド</th><th>型</th><th>説明</th></tr>
+      <tr><td><code>url</code></td><td>string</td><td>クロール済み記事URL</td></tr>
+      <tr><td><code>articleId</code></td><td>string</td><td>生成された articles ドキュメントID</td></tr>
+      <tr><td><code>status</code></td><td>string</td><td>"success" | "error"</td></tr>
+      <tr><td><code>errorMessage</code></td><td>string?</td><td>エラー時のメッセージ</td></tr>
+      <tr><td><code>crawledAt</code></td><td>timestamp</td><td>クロール実行日時</td></tr>
+      <tr><td><code>retryCount</code></td><td>number</td><td>リトライ回数（最大3）</td></tr>
+    </table>
+
+    <hr class="section-divider" />
+
+    <!-- 5. 非機能要件 -->
+    <h2 id="nonfunctional">5. 非機能要件</h2>
+    <table>
+      <tr><th>項目</th><th>仕様</th></tr>
+      <tr><td>バッチスケジュール</td><td>毎日 6:00 JST（Vercel Cron）</td></tr>
+      <tr><td>承認フロー</td><td>なし（生成後に自動公開）</td></tr>
+      <tr><td>遡及取得</td><td>全件（初回のみ、過去記事100件超を想定）</td></tr>
+      <tr><td>公開範囲</td><td>全公開</td></tr>
+      <tr><td>文体</td><td>です・ます調統一</td></tr>
+      <tr><td>固有名詞</td><td>モデル名・製品名・APIは英語のまま（例: Claude Opus, Function Calling）</td></tr>
+      <tr><td>翻訳品質</td><td>元記事の情報量を削らず、解説を加えて1.5〜2倍の情報密度を目標</td></tr>
+      <tr><td>エラー通知</td><td>バッチ失敗時は Firestore にエラーログを記録</td></tr>
+      <tr><td>Vercel Cron</td><td>Hobby プランの場合1日1回の制約あり（Pro プランへの変更を検討）</td></tr>
+    </table>
+
+    <hr class="section-divider" />
+
+    <!-- 6. 技術スタック -->
+    <h2 id="tech-stack">6. 技術スタック</h2>
+    <table>
+      <tr><th>レイヤー</th><th>技術</th><th>用途</th></tr>
+      <tr><td>フロントエンド</td><td>Next.js (App Router) + TypeScript + Tailwind CSS</td><td>記事一覧・詳細ページ</td></tr>
+      <tr><td>バッチ処理</td><td>Next.js API Routes + Vercel Cron Functions</td><td>クロール・翻訳・Firestore 書き込み</td></tr>
+      <tr><td>AI</td><td>Claude API (claude-opus-4-7)</td><td>翻訳・解説生成・メタ情報判定</td></tr>
+      <tr><td>データベース</td><td>Firebase Firestore</td><td>記事データ・クロールログ保存</td></tr>
+      <tr><td>ホスティング</td><td>Vercel</td><td>フロントエンド・API Routes のデプロイ</td></tr>
+      <tr><td>クローリング</td><td>Node.js fetch + cheerio</td><td>HTML 取得・DOM パース</td></tr>
+      <tr><td>Markdown レンダリング</td><td>react-markdown + remark-gfm</td><td>記事本文の表示</td></tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>注意:</strong> Vercel Hobby プランでは Cron Functions は1日1回・実行時間60秒の制限がある。初回の遡及取得（100件超）では時間が不足する可能性があるため、初回のみローカルから手動実行するスクリプトを別途用意する。
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- 7. コスト試算 -->
+    <h2 id="cost">7. コスト試算</h2>
+    <table class="cost-table">
+      <tr><th>処理</th><th>想定トークン数（入出力合計）</th><th>月間処理件数</th><th>月額試算</th></tr>
+      <tr><td>翻訳・解説・メタ情報生成（claude-opus-4-7）</td><td>約 10,000 tokens/件</td><td>30〜60 件</td><td>約 $15〜$30</td></tr>
+      <tr><td>初回遡及処理（一時費用）</td><td>約 10,000 tokens/件</td><td>100 件</td><td>約 $50（初回のみ）</td></tr>
+      <tr><td>Vercel（Hobby プラン）</td><td>—</td><td>—</td><td>無料</td></tr>
+      <tr><td>Firebase（Spark プラン）</td><td>—</td><td>—</td><td>無料〜低コスト</td></tr>
+      <tr><td colspan="3"><strong>定常月額合計</strong></td><td><strong>約 $15〜$30</strong></td></tr>
+    </table>
+
+    <hr class="section-divider" />
+
+    <!-- 8. スコープ外 -->
+    <h2 id="out-of-scope">8. スコープ外（将来検討）</h2>
+    <ul>
+      <li>承認フロー・管理画面（自動公開のため初版では不要）</li>
+      <li>SNS 自動投稿（X / LinkedIn など）</li>
+      <li>全文検索機能</li>
+      <li>記事の更新検知（既存記事が編集された場合の再翻訳）</li>
+      <li>Zenn / note へのクロスポスト</li>
+      <li>多言語対応（日本語のみ）</li>
+    </ul>
+
+  </div><!-- /body -->
+
+  <div class="footer">
+    claude-blog-explanation-jp 要件定義書 v1.0.0 ／ 2026-05-27
+  </div>
+</div>
+</body>
+</html>
