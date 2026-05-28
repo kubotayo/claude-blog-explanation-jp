@@ -11,19 +11,19 @@ type Props = {
 /** 重要度スコアに対応するスタイルクラスとラベルのマッピング */
 const SCORE_STYLE: Record<ImportanceScore, { classes: string; label: string }> = {
   S: {
-    classes: "bg-red-50 text-red-700 border border-red-200",
+    classes: "bg-red-600 text-white",
     label: "重要度 S",
   },
   A: {
-    classes: "bg-amber-50 text-amber-700 border border-amber-200",
+    classes: "bg-amber-500 text-white",
     label: "重要度 A",
   },
   B: {
-    classes: "bg-blue-50 text-blue-700 border border-blue-200",
+    classes: "bg-blue-600 text-white",
     label: "重要度 B",
   },
   C: {
-    classes: "bg-gray-100 text-gray-600 border border-gray-300",
+    classes: "bg-gray-500 text-white",
     label: "重要度 C",
   },
 };

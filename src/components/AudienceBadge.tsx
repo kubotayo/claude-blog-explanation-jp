@@ -11,19 +11,19 @@ type Props = {
 /** 対象読者種別に対応するスタイルクラスとラベルのマッピング */
 const AUDIENCE_STYLE: Record<TargetAudience, { classes: string; label: string }> = {
   engineer: {
-    classes: "bg-green-50 text-green-800 border border-green-200",
+    classes: "bg-green-700 text-white",
     label: "エンジニア向け",
   },
   business: {
-    classes: "bg-purple-50 text-purple-800 border border-purple-200",
+    classes: "bg-purple-700 text-white",
     label: "ビジネス向け",
   },
   general: {
-    classes: "bg-pink-50 text-pink-800 border border-pink-200",
+    classes: "bg-pink-600 text-white",
     label: "一般向け",
   },
   researcher: {
-    classes: "bg-teal-50 text-teal-800 border border-teal-200",
+    classes: "bg-teal-600 text-white",
     label: "研究者向け",
   },
 };
