@@ -100,12 +100,13 @@ function extractJson(text: string): GeneratedArticle {
 export async function generateArticle(
   crawled: CrawledArticle
 ): Promise<GeneratedArticle> {
+  // Vercel 60秒タイムアウト対策として claude-sonnet-4-6 を使用する
+  // Opus は高品質だが応答に60秒以上かかる場合があり Vercel Hobby では動作しない
   const response = await anthropic.messages.create({
-    model: "claude-opus-4-7",
+    model: "claude-sonnet-4-6",
     max_tokens: 16000,
     thinking: {
-      type: "enabled",
-      budget_tokens: 10000,
+      type: "adaptive",
     },
     system: SYSTEM_PROMPT,
     messages: [

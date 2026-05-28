@@ -42,8 +42,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     result.skipped = allUrls.length - newUrls.length;
 
+    // Vercel Hobby プランの60秒タイムアウト対策として1回の呼び出しで処理するのは1件のみとする
+    // 毎日のCronで1件ずつ処理し、全件処理が完了するまで繰り返す
+    const urlsToProcess = newUrls.slice(0, 1);
+
     // 新規URLを順次処理する（並列処理は API レートリミットに配慮してしない）
-    for (const url of newUrls) {
+    for (const url of urlsToProcess) {
       try {
         console.log(`[cron/crawl] 処理中: ${url}`);
 

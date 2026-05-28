@@ -1,18 +1,22 @@
 /**
  * Firestore CRUD 操作モジュール
- * articles コレクションと crawl_log コレクションの読み書きを担当する。
- * Server Component から使用するため、Firebase Client SDK がサーバーサイドで動く。
+ *
+ * 読み取り系（getArticles, getArticleById）: Firebase Client SDK を使用
+ *   → ISR の Server Component から呼ばれる
+ *
+ * 書き込み系（saveArticle, logCrawl, getCrawledUrls）: Firebase Admin SDK を使用
+ *   → API Route（Cron バッチ）から呼ばれる。セキュリティルールをバイパスするため
  */
 import {
   collection,
   doc,
   getDoc,
   getDocs,
-  setDoc,
-  addDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { getAdminDb } from "./firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import type { Article, CrawledArticle, GeneratedArticle } from "@/types/article";
 
 /** 重要度スコアを数値にマッピングするテーブル（降順ソートのため）
@@ -30,7 +34,9 @@ export async function saveArticle(
   crawled: CrawledArticle,
   generated: GeneratedArticle
 ): Promise<string> {
-  const articlesRef = collection(db, "articles");
+  // Admin SDK を使いセキュリティルールをバイパスして書き込む
+  const adminDb = getAdminDb();
+  const articlesRef = adminDb.collection("articles");
 
   const docData = {
     // 生成コンテンツ
@@ -48,15 +54,13 @@ export async function saveArticle(
     originalTitle: crawled.originalTitle,
     author: crawled.author,
     category: crawled.category,
-    originalPublishedAt: crawled.originalPublishedAt
-      ? Timestamp.fromDate(crawled.originalPublishedAt)
-      : null,
+    originalPublishedAt: crawled.originalPublishedAt ?? null,
     // システムフィールド
     status: "published",
-    createdAt: Timestamp.now(),
+    createdAt: FieldValue.serverTimestamp(),
   };
 
-  const docRef = await addDoc(articlesRef, docData);
+  const docRef = await articlesRef.add(docData);
   return docRef.id;
 }
 
@@ -71,27 +75,33 @@ export async function logCrawl(
   errorMessage?: string,
   retryCount?: number
 ): Promise<void> {
+  // Admin SDK を使いセキュリティルールをバイパスして書き込む
+  const adminDb = getAdminDb();
   // URLをbase64urlエンコードしてドキュメントIDとする
   const docId = Buffer.from(url).toString("base64url");
-  const crawlLogRef = doc(db, "crawl_log", docId);
+  const crawlLogRef = adminDb.collection("crawl_log").doc(docId);
 
-  await setDoc(crawlLogRef, {
+  await crawlLogRef.set({
     url,
     articleId: articleId ?? null,
     status,
     errorMessage: errorMessage ?? null,
     retryCount: retryCount ?? 0,
-    processedAt: Timestamp.now(),
+    processedAt: FieldValue.serverTimestamp(),
   });
 }
 
 /**
- * crawl_log から処理済みURLのセットを返す
+ * crawl_log から処理済みURLのセットを返す（Admin SDK 使用）
  * 差分取得時に未処理URLのみ処理するために使用する
  */
 export async function getCrawledUrls(): Promise<Set<string>> {
-  const crawlLogRef = collection(db, "crawl_log");
-  const snapshot = await getDocs(crawlLogRef);
+  const adminDb = getAdminDb();
+  // status が "success" のもののみ処理済みとみなし、エラーは再試行対象とする
+  const snapshot = await adminDb
+    .collection("crawl_log")
+    .where("status", "==", "success")
+    .get();
   const urls = new Set<string>();
 
   snapshot.forEach((docSnap) => {
