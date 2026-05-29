@@ -43,7 +43,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       {/* ← 一覧に戻るリンク */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-6 transition"
+        className="inline-flex items-center gap-1 text-sm text-gray-700 hover:text-gray-800 mb-6 transition"
       >
         ← 一覧に戻る
       </Link>
@@ -57,16 +57,16 @@ export default async function ArticleDetailPage({ params }: Props) {
         {article.originalPublishedAt && (
           <time
             dateTime={article.originalPublishedAt.toISOString()}
-            className="text-xs text-gray-400"
+            className="text-xs text-gray-600"
           >
             {formatDate(article.originalPublishedAt)}
           </time>
         )}
         {article.author && (
-          <span className="text-xs text-gray-400">· {article.author}</span>
+          <span className="text-xs text-gray-600">· {article.author}</span>
         )}
         {article.category && (
-          <span className="text-xs text-gray-400">· {article.category}</span>
+          <span className="text-xs text-gray-600">· {article.category}</span>
         )}
       </div>
 
@@ -76,7 +76,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       </h1>
 
       {/* 原文タイトル */}
-      <p className="text-sm text-gray-400 mb-6">{article.originalTitle}</p>
+      <p className="text-sm text-gray-600 mb-6">{article.originalTitle}</p>
 
       {/* 要約ボックス */}
       <div className="bg-blue-50 border-l-4 border-blue-600 rounded-r-lg p-4 mb-8">

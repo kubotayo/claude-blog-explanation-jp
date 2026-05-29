@@ -45,12 +45,12 @@ export default function ArticleCard({ article }: Props) {
         </h2>
 
         {/* 要約（2行でクリップ） */}
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+        <p className="text-sm text-gray-700 line-clamp-2 mb-3">
           {article.summary}
         </p>
 
         {/* フッター: 公開日・著者 */}
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-gray-600">
           {article.originalPublishedAt && (
             <time dateTime={article.originalPublishedAt.toISOString()}>
               {formatDate(article.originalPublishedAt)}

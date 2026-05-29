@@ -50,7 +50,7 @@ export default async function HomePage({ searchParams }: Props) {
 
       {/* 記事カード一覧 */}
       {filteredArticles.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-gray-600">
           <p className="text-lg">まだ記録がありません。</p>
         </div>
       ) : (

@@ -53,7 +53,7 @@ export default function FilterBar() {
     <div className="flex flex-col gap-4 mb-6">
       {/* 重要度フィルター */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
           重要度
         </p>
         <div className="flex flex-wrap gap-2">
@@ -66,7 +66,7 @@ export default function FilterBar() {
                 className={`rounded-full px-3 py-1 text-xs font-medium border transition ${
                   isActive
                     ? "bg-[#0f3460] text-white border-[#0f3460]"
-                    : "bg-white text-gray-600 border-gray-300 hover:border-[#0f3460] hover:text-[#0f3460]"
+                    : "bg-white text-gray-700 border-gray-400 hover:border-[#0f3460] hover:text-[#0f3460]"
                 }`}
               >
                 {label}
@@ -78,7 +78,7 @@ export default function FilterBar() {
 
       {/* 対象読者フィルター */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
           対象読者
         </p>
         <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ export default function FilterBar() {
                 className={`rounded-full px-3 py-1 text-xs font-medium border transition ${
                   isActive
                     ? "bg-[#0f3460] text-white border-[#0f3460]"
-                    : "bg-white text-gray-600 border-gray-300 hover:border-[#0f3460] hover:text-[#0f3460]"
+                    : "bg-white text-gray-700 border-gray-400 hover:border-[#0f3460] hover:text-[#0f3460]"
                 }`}
               >
                 {label}
