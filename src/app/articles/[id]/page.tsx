@@ -5,11 +5,10 @@
  */
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { getArticleById } from "@/lib/firestore";
 import ImportanceBadge from "@/components/ImportanceBadge";
 import AudienceBadge from "@/components/AudienceBadge";
+import ArticleTabs from "@/components/ArticleTabs";
 
 // ISR: 1時間ごとに再生成する
 export const revalidate = 3600;
@@ -85,72 +84,9 @@ export default async function ArticleDetailPage({ params }: Props) {
         </p>
       </div>
 
-      {/* 詳細解説（Markdown レンダリング） */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">詳細解説</h2>
-        <div className="prose prose-slate max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {article.detailedExplanation}
-          </ReactMarkdown>
-        </div>
-      </section>
-
-      {/* ポイントまとめ（エンジニア向け・ビジネス向けを2カラム） */}
-      {(article.keyPointsEngineer.length > 0 ||
-        article.keyPointsBusiness.length > 0) && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">ポイントまとめ</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* エンジニア向けポイント */}
-            {article.keyPointsEngineer.length > 0 && (
-              <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-                <h3 className="text-sm font-bold text-green-800 mb-3">
-                  エンジニア向け
-                </h3>
-                <ul className="space-y-2">
-                  {article.keyPointsEngineer.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="mt-0.5 text-green-600 flex-shrink-0">✓</span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* ビジネス向けポイント */}
-            {article.keyPointsBusiness.length > 0 && (
-              <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
-                <h3 className="text-sm font-bold text-purple-800 mb-3">
-                  ビジネス向け
-                </h3>
-                <ul className="space-y-2">
-                  {article.keyPointsBusiness.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="mt-0.5 text-purple-600 flex-shrink-0">✓</span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* 日本での活用イメージ */}
-      {article.japanUseCases && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            日本での活用イメージ
-          </h2>
-          <div className="prose prose-slate max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {article.japanUseCases}
-            </ReactMarkdown>
-          </div>
-        </section>
-      )}
+      {/* タブUI: 記事解説 / 動画まとめ
+          動画まとめがある記事はタブ切り替えで表示し、ない記事は記事解説のみを表示する */}
+      <ArticleTabs article={article} />
 
       {/* 原文リンクボタン */}
       <div className="border-t border-gray-200 pt-6">

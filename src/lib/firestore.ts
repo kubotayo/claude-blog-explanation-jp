@@ -17,7 +17,7 @@ import {
 import { db } from "./firebase";
 import { getAdminDb } from "./firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import type { Article, CrawledArticle, GeneratedArticle } from "@/types/article";
+import type { Article, CrawledArticle, GeneratedArticle, VideoSummary } from "@/types/article";
 
 /** 重要度スコアを数値にマッピングするテーブル（降順ソートのため）
  * Firestore の文字列ソートでは S→A→B→C の順にならないので JS 側でソートする
@@ -28,11 +28,13 @@ const IMPORTANCE_ORDER: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 };
  * articles コレクションに記事を保存し、ドキュメントIDを返す
  * @param crawled クロールで取得したメタ情報
  * @param generated Claude API が生成した翻訳・解説データ
+ * @param videoSummaries YouTube 動画の日本語まとめ（動画なし記事は空配列）
  * @returns 保存したドキュメントID
  */
 export async function saveArticle(
   crawled: CrawledArticle,
-  generated: GeneratedArticle
+  generated: GeneratedArticle,
+  videoSummaries: VideoSummary[] = []
 ): Promise<string> {
   // Admin SDK を使いセキュリティルールをバイパスして書き込む
   const adminDb = getAdminDb();
@@ -55,6 +57,9 @@ export async function saveArticle(
     author: crawled.author,
     category: crawled.category,
     originalPublishedAt: crawled.originalPublishedAt ?? null,
+    youtubeVideoIds: crawled.youtubeVideoIds,
+    // YouTube 動画まとめ（動画なし記事は空配列として保存する）
+    videoSummaries: videoSummaries,
     // システムフィールド
     status: "published",
     createdAt: FieldValue.serverTimestamp(),
@@ -142,6 +147,9 @@ export async function getArticles(): Promise<Article[]> {
       originalPublishedAt: data.originalPublishedAt
         ? (data.originalPublishedAt as Timestamp).toDate()
         : null,
+      youtubeVideoIds: (data.youtubeVideoIds ?? []) as string[],
+      // 既存記事は videoSummaries フィールドが存在しないため空配列をデフォルトとする
+      videoSummaries: (data.videoSummaries ?? []) as VideoSummary[],
       status: data.status,
       createdAt: (data.createdAt as Timestamp).toDate(),
     } as Article;
@@ -190,6 +198,9 @@ export async function getArticleById(id: string): Promise<Article | null> {
     originalPublishedAt: data.originalPublishedAt
       ? (data.originalPublishedAt as Timestamp).toDate()
       : null,
+    youtubeVideoIds: (data.youtubeVideoIds ?? []) as string[],
+    // 既存記事は videoSummaries フィールドが存在しないため空配列をデフォルトとする
+    videoSummaries: (data.videoSummaries ?? []) as VideoSummary[],
     status: data.status,
     createdAt: (data.createdAt as Timestamp).toDate(),
   } as Article;

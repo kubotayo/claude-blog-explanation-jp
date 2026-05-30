@@ -3,7 +3,7 @@
  * モデル: claude-opus-4-7、extended thinking（adaptive）を使用して高品質な解説を生成する
  */
 import { anthropic } from "./anthropic";
-import type { CrawledArticle, GeneratedArticle } from "@/types/article";
+import type { CrawledArticle, GeneratedArticle, VideoSummary } from "@/types/article";
 
 /** システムプロンプト: Anthropic ブログの日本語解説ライターとして振る舞う */
 const SYSTEM_PROMPT = `あなたは Anthropic 公式ブログの日本語解説ライターです。
@@ -91,6 +91,57 @@ function extractJson(text: string): GeneratedArticle {
   }
 
   throw new Error("レスポンスから JSON を抽出できませんでした");
+}
+
+/**
+ * YouTube 動画の日本語まとめを生成するプロンプトを組み立てる
+ */
+function buildVideoSummaryPrompt(videoId: string, transcript: string): string {
+  return `あなたはYouTube動画の内容を日本語で分かりやすくまとめる解説ライターです。
+文体は「です・ます調」、Markdown形式で以下の構成で出力してください：
+- 概要（2〜3文）
+- 主要なポイント（箇条書き）
+- 視聴後のアクション提案
+
+動画ID: ${videoId}
+字幕テキスト:
+${transcript}`;
+}
+
+/**
+ * YouTube 動画の字幕テキストから日本語まとめ（Markdown）を生成する
+ * thinking は不要（動画まとめは短文なのでコスト最適化のため使わない）
+ *
+ * @param videoId YouTube 動画ID
+ * @param transcript 字幕プレーンテキスト
+ * @returns VideoSummary オブジェクト
+ */
+export async function generateVideoSummary(
+  videoId: string,
+  transcript: string
+): Promise<VideoSummary> {
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 4000,
+    messages: [
+      {
+        role: "user",
+        content: buildVideoSummaryPrompt(videoId, transcript),
+      },
+    ],
+  });
+
+  // テキストブロックのみを結合してまとめテキストを取得する
+  const summaryText = response.content
+    .filter((block) => block.type === "text")
+    .map((block) => (block.type === "text" ? block.text : ""))
+    .join("")
+    .trim();
+
+  return {
+    videoId,
+    japaneseSummary: summaryText,
+  };
 }
 
 /**

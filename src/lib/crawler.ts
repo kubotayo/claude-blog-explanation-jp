@@ -151,6 +151,20 @@ export async function fetchArticleContent(url: string): Promise<CrawledArticle> 
     }
   }
 
+  // YouTube 動画ID: <iframe src="https://www.youtube.com/embed/VIDEO_ID..."> から抽出する
+  // 記事内に埋め込まれた YouTube 動画を動画まとめ機能で処理するために収集する
+  const youtubeVideoIds: string[] = [];
+  richtextEl.find("iframe").each((_, el) => {
+    const src = $(el).attr("src") ?? "";
+    // youtube.com/embed/{videoId} または youtube-nocookie.com/embed/{videoId} に対応する
+    const match = src.match(
+      /youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{11})/
+    );
+    if (match && match[1]) {
+      youtubeVideoIds.push(match[1]);
+    }
+  });
+
   return {
     originalUrl: url,
     originalTitle,
@@ -158,5 +172,6 @@ export async function fetchArticleContent(url: string): Promise<CrawledArticle> 
     author,
     category: category || "General",
     originalPublishedAt,
+    youtubeVideoIds,
   };
 }

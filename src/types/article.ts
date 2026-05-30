@@ -22,6 +22,12 @@ export type GeneratedArticle = {
   importanceReason: string;      // 重要度判定の根拠
 };
 
+/** YouTube 動画の日本語まとめ（1動画につき1オブジェクト） */
+export type VideoSummary = {
+  videoId: string;
+  japaneseSummary: string; // Markdown形式の日本語まとめ
+};
+
 /** クロールで取得する原文のメタ情報 */
 export type CrawledArticle = {
   originalUrl: string;
@@ -30,6 +36,7 @@ export type CrawledArticle = {
   author: string;
   category: string;
   originalPublishedAt: Date | null;
+  youtubeVideoIds: string[]; // 記事内の YouTube 動画ID（iframe src から抽出）
 };
 
 /** Firestore に保存する完全な記事データ */
@@ -38,4 +45,5 @@ export type Article = GeneratedArticle &
     id: string;
     status: "published" | "error";
     createdAt: Date;
+    videoSummaries: VideoSummary[]; // YouTube 動画の日本語まとめ（動画なし記事は空配列）
   };
