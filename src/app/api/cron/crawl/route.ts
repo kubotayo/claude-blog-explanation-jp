@@ -7,8 +7,10 @@
  */
 import { NextResponse } from "next/server";
 import { fetchArticleUrls, fetchArticleContent } from "@/lib/crawler";
-import { generateArticle } from "@/lib/generator";
+import { generateArticle, generateVideoSummary } from "@/lib/generator";
 import { saveArticle, logCrawl, getCrawledUrls } from "@/lib/firestore";
+import { fetchYouTubeTranscript } from "@/lib/youtube";
+import type { VideoSummary } from "@/types/article";
 
 /** クロール結果のサマリー */
 type CrawlResult = {
@@ -51,10 +53,26 @@ export async function GET(request: Request): Promise<NextResponse> {
       try {
         console.log(`[cron/crawl] 処理中: ${url}`);
 
-        // クロール → 生成 → 保存の順で処理する
+        // クロール → 動画まとめ生成 → 記事生成 → 保存の順で処理する
         const crawled = await fetchArticleContent(url);
         const generated = await generateArticle(crawled);
-        const articleId = await saveArticle(crawled, generated);
+
+        // 動画字幕の取得と日本語まとめ生成
+        // 失敗した動画があっても記事保存は継続するため try/catch で個別にハンドリングする
+        const videoSummaries: VideoSummary[] = [];
+        for (const videoId of crawled.youtubeVideoIds) {
+          try {
+            const transcript = await fetchYouTubeTranscript(videoId);
+            if (transcript) {
+              const summary = await generateVideoSummary(videoId, transcript);
+              videoSummaries.push(summary);
+            }
+          } catch (err) {
+            console.error(`[cron/crawl] 動画処理エラー: ${videoId}`, err);
+          }
+        }
+
+        const articleId = await saveArticle(crawled, generated, videoSummaries);
 
         // 成功ログを記録する
         await logCrawl(url, articleId, "success");
